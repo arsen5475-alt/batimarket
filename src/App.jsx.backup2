@@ -1,7 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from './supabaseClient'
-import './mapfix'
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 
 const CATS = ['Tout','Carrelage','Bois','Plomberie','Électricité','Outillage','Peinture','Gros œuvre']
 const FORM_CATS = ['Carrelage','Bois','Plomberie','Électricité','Outillage','Peinture','Gros œuvre']
@@ -9,14 +7,6 @@ const ETATS = ['Neuf','Très bon état','Bon état','Occasion']
 const EMOJI = { Carrelage:'🔲', Bois:'🪵', Plomberie:'🚿', 'Électricité':'⚡', Outillage:'🔧', Peinture:'🎨', 'Gros œuvre':'🧱' }
 const MAX_PHOTOS = 5
 
-async function geocodeCity(city){
-  try{
-    const r = await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(city + ', France'))
-    const d = await r.json()
-    if(d && d[0]) return { lat: parseFloat(d[0].lat), lng: parseFloat(d[0].lon) }
-  }catch(e){}
-  return null
-}
 function priceNum(p){ const m=(p||'').replace(',','.').match(/[\d.]+/); return m?parseFloat(m[0]):0 }
 function loadFavs(){ try{return JSON.parse(localStorage.getItem('bm_favs')||'[]')}catch{return[]} }
 function imgsOf(l){ if(l.images && l.images.length) return l.images; if(l.image_url) return [l.image_url]; return [] }
@@ -145,7 +135,6 @@ export default function App() {
       <div className="viewtabs">
         <button className={'vtab' + (view==='all'?' on':'')} onClick={()=>setView('all')}>Toutes les annonces</button>
         <button className={'vtab' + (view==='fav'?' on':'')} onClick={()=>setView('fav')}>❤️ Mes favoris ({favs.length})</button>
-        <button className={'vtab' + (view==='map'?' on':'')} onClick={()=>setView('map')}>🗺️ Carte</button>
         {session && (
           <button className={'vtab' + (view==='mine'?' on':'')} onClick={()=>setView('mine')}>📋 Mes annonces ({myCount})</button>
         )}
@@ -178,9 +167,6 @@ export default function App() {
         <button className="reset" onClick={resetFilters}>Réinitialiser</button>
       </div>
 
-      {view === 'map' ? (
-        <MapView items={items} onOpen={(l)=>setSelected(l)} />
-      ) : (
       <main className="wrap">
         <h2>{view==='mine' ? 'Mes annonces' : view==='fav' ? 'Mes favoris' : 'Annonces près de chez vous'}</h2>
         <div className="cnt">
@@ -233,7 +219,6 @@ export default function App() {
           </div>
         )}
       </main>
-      )}
 
       {showAuth && <AuthModal onClose={() => { setShowAuth(false); if(authNext){ const fn=authNext; setAuthNext(null); setTimeout(fn,100) } }} />}
       {showSell && session && (
@@ -525,15 +510,11 @@ function ListingForm({ session, initial, onClose, onDone, mode }) {
         uploaded.push(data.publicUrl)
       }
       const allImgs = [...existing, ...uploaded]
-      let coords = null
-      if (location) coords = await geocodeCity(location)
       const payload = {
         title, price, category, etat, location,
         seller: seller || session.user.email.split('@')[0],
         is_pro: isPro, emoji: EMOJI[category] || '📦',
-        images: allImgs, image_url: allImgs[0] || null,
-        lat: coords ? coords.lat : (initial?.lat ?? null),
-        lng: coords ? coords.lng : (initial?.lng ?? null)
+        images: allImgs, image_url: allImgs[0] || null
       }
       if (mode === 'edit') {
         const { error } = await supabase.from('listings').update(payload).eq('id', initial.id)
@@ -597,40 +578,3 @@ function SellModal({ session, onClose, onDone }) {
 function EditModal({ session, listing, onClose, onDone }) {
   return <ListingForm session={session} initial={listing} mode="edit" onClose={onClose} onDone={onDone} />
 }
-
-function MapView({ items, onOpen }) {
-  const withCoords = items.filter(l => l.lat && l.lng)
-  const center = withCoords.length ? [withCoords[0].lat, withCoords[0].lng] : [43.2965, 5.3698]
-  return (
-    <div className="map-wrap">
-      <h2>Annonces sur la carte</h2>
-      <div className="cnt">{withCoords.length} annonce{withCoords.length>1?'s':''} géolocalisée{withCoords.length>1?'s':''}</div>
-      {withCoords.length === 0 ? (
-        <div className="map-empty">Aucune annonce géolocalisée pour le moment.<br/>Les nouvelles annonces avec une ville apparaîtront ici.</div>
-      ) : (
-        <div className="map-box">
-          <MapContainer center={center} zoom={9} scrollWheelZoom={true}>
-            <TileLayer
-              attribution='&copy; OpenStreetMap'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-            {withCoords.map(l => (
-              <Marker key={l.id} position={[l.lat, l.lng]}>
-                <Popup>
-                  <div className="map-pop">
-                    {l.image_url && <img src={l.image_url} alt={l.title} />}
-                    <div className="mp">{l.price}</div>
-                    <div className="mt">{l.title}</div>
-                    <div className="ml">📍 {l.location}</div>
-                    <button onClick={()=>onOpen(l)}>Voir l'annonce</button>
-                  </div>
-                </Popup>
-              </Marker>
-            ))}
-          </MapContainer>
-        </div>
-      )}
-    </div>
-  )
-}
-
