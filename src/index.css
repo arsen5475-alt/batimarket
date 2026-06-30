@@ -217,3 +217,21 @@ button{font-family:inherit}
 .map-pop .ml{font-size:12px;color:#777}
 .map-pop button{margin-top:6px;width:100%;background:var(--accent);color:#fff;border:0;border-radius:8px;padding:7px;font-weight:700;font-size:13px;cursor:pointer}
 .map-empty{text-align:center;color:var(--muted);padding:40px 0}
+.admin-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:12px;margin-bottom:8px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;text-align:center;box-shadow:var(--shadow)}
+.stat .sv{font-size:28px;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent-l));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.stat .sl{font-size:13px;color:var(--muted);font-weight:600;margin-top:2px}
+.admin-cats{display:flex;flex-wrap:wrap;gap:8px}
+.admin-cat{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:7px 14px;font-size:13px;color:var(--muted)}
+.admin-cat b{color:var(--ink)}
+.admin-list{display:flex;flex-direction:column;gap:10px}
+.admin-row{display:flex;align-items:center;gap:13px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;box-shadow:var(--shadow)}
+.ar-img{width:56px;height:56px;border-radius:10px;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:var(--bg2);font-size:26px;cursor:pointer}
+.ar-img img{width:100%;height:100%;object-fit:cover}
+.ar-info{flex:1;min-width:0;cursor:pointer}
+.ar-title{font-weight:700;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ar-meta{font-size:12.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:3px}
+.ar-del{background:#fff;border:1px solid #fecaca;color:#dc2626;border-radius:10px;padding:9px 15px;font-weight:700;font-size:13px;cursor:pointer;flex-shrink:0}
+[data-theme="dark"] .ar-del{background:#2a1414;border-color:#5b2727;color:#f87171}
+.ar-del:hover{background:#fef2f2}
+[data-theme="dark"] .ar-del:hover{background:#3a1a1a}

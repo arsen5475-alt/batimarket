@@ -8,7 +8,6 @@ const FORM_CATS = ['Carrelage','Bois','Plomberie','Électricité','Outillage','P
 const ETATS = ['Neuf','Très bon état','Bon état','Occasion']
 const EMOJI = { Carrelage:'🔲', Bois:'🪵', Plomberie:'🚿', 'Électricité':'⚡', Outillage:'🔧', Peinture:'🎨', 'Gros œuvre':'🧱' }
 const MAX_PHOTOS = 5
-const ADMIN_EMAIL = 'arsen5475@gmail.com'
 
 async function geocodeCity(city){
   try{
@@ -49,7 +48,6 @@ export default function App() {
   const [chat, setChat] = useState(null)
   const [showInbox, setShowInbox] = useState(false)
   const [authNext, setAuthNext] = useState(null)
-  const isAdmin = session && session.user.email === ADMIN_EMAIL
 
   async function loadListings() {
     const { data, error } = await supabase
@@ -148,7 +146,6 @@ export default function App() {
         <button className={'vtab' + (view==='all'?' on':'')} onClick={()=>setView('all')}>Toutes les annonces</button>
         <button className={'vtab' + (view==='fav'?' on':'')} onClick={()=>setView('fav')}>❤️ Mes favoris ({favs.length})</button>
         <button className={'vtab' + (view==='map'?' on':'')} onClick={()=>setView('map')}>🗺️ Carte</button>
-        {isAdmin && <button className={'vtab' + (view==='admin'?' on':'')} onClick={()=>setView('admin')}>🛠️ Admin</button>}
         {session && (
           <button className={'vtab' + (view==='mine'?' on':'')} onClick={()=>setView('mine')}>📋 Mes annonces ({myCount})</button>
         )}
@@ -181,9 +178,7 @@ export default function App() {
         <button className="reset" onClick={resetFilters}>Réinitialiser</button>
       </div>
 
-      {view === 'admin' && isAdmin ? (
-        <AdminView listings={listings} onDelete={deleteListing} onOpen={(l)=>setSelected(l)} />
-      ) : view === 'map' ? (
+      {view === 'map' ? (
         <MapView items={items} onOpen={(l)=>setSelected(l)} />
       ) : (
       <main className="wrap">
@@ -635,56 +630,6 @@ function MapView({ items, onOpen }) {
           </MapContainer>
         </div>
       )}
-    </div>
-  )
-}
-
-function AdminView({ listings, onDelete, onOpen }) {
-  const total = listings.length
-  const pros = listings.filter(l => l.is_pro).length
-  const parts = total - pros
-  const withPhoto = listings.filter(l => (l.images && l.images.length) || l.image_url).length
-  const sellers = [...new Set(listings.map(l => l.seller).filter(Boolean))]
-  const byCat = {}
-  listings.forEach(l => { byCat[l.category] = (byCat[l.category]||0)+1 })
-
-  return (
-    <div className="wrap">
-      <h2>🛠️ Panneau d'administration</h2>
-      <div className="cnt">Gestion de toutes les annonces de BatiMarket</div>
-
-      <div className="admin-stats">
-        <div className="stat"><div className="sv">{total}</div><div className="sl">Annonces</div></div>
-        <div className="stat"><div className="sv">{pros}</div><div className="sl">Pro</div></div>
-        <div className="stat"><div className="sv">{parts}</div><div className="sl">Particuliers</div></div>
-        <div className="stat"><div className="sv">{withPhoto}</div><div className="sl">Avec photo</div></div>
-        <div className="stat"><div className="sv">{sellers.length}</div><div className="sl">Vendeurs</div></div>
-      </div>
-
-      <h3 style={{marginTop:'24px',marginBottom:'10px',fontSize:'17px',fontWeight:800}}>Par catégorie</h3>
-      <div className="admin-cats">
-        {Object.entries(byCat).map(([c,n]) => (
-          <span key={c} className="admin-cat">{c}: <b>{n}</b></span>
-        ))}
-      </div>
-
-      <h3 style={{marginTop:'28px',marginBottom:'12px',fontSize:'17px',fontWeight:800}}>Toutes les annonces</h3>
-      <div className="admin-list">
-        {listings.map(l => (
-          <div className="admin-row" key={l.id}>
-            <div className="ar-img" onClick={()=>onOpen(l)}>
-              {(l.images && l.images[0]) || l.image_url
-                ? <img src={(l.images && l.images[0]) || l.image_url} alt="" />
-                : <span>{l.emoji}</span>}
-            </div>
-            <div className="ar-info" onClick={()=>onOpen(l)}>
-              <div className="ar-title">{l.title}</div>
-              <div className="ar-meta">{l.price} · {l.category} · 📍 {l.location || '—'} · {l.is_pro ? 'Pro' : 'Particulier'} · {l.seller}</div>
-            </div>
-            <button className="ar-del" onClick={() => { if(confirm('Supprimer définitivement cette annonce ?')) onDelete(l.id) }}>Supprimer</button>
-          </div>
-        ))}
-      </div>
     </div>
   )
 }
